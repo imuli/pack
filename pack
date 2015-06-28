@@ -34,7 +34,7 @@ fn help {
 }
 
 fn pack {
-	source=`{realpath -z $1}
+	source=`{readlink -f -z $1}
 	dest=`{basename -z $source}
 	~ $1 . && dest=../$dest
 	test -d $source && {
