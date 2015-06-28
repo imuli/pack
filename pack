@@ -1,0 +1,107 @@
+#!/usr/bin/rc
+
+ifs=()
+nl='
+'
+
+fn err {
+	echo $* >[1=2]
+}
+
+fn strip {
+	echo -n $1 | sed -E 's/(\.(tar|xz|gz|bz2|zip))$//'
+}
+
+fn type {
+	file -b --mime-type -- $1
+}
+
+fn help {
+	exec >[1=2]
+	switch($1){
+	case *unpack
+		echo Usage: $1 '[FILE...]'
+		echo unpack compressed files and archives
+	case *
+		echo $1 is not implemented
+	}
+}
+
+fn pack {
+	help $0
+}
+
+fn fix_archive {
+	$temp=$1; $dest=$2; files=($temp/*)
+	if(~ $#files 1){
+		mv -- $files(1) $dest
+		rm -rf -- $temp
+	} else {
+		mv -- $temp $dest
+	}
+}
+
+fn unpack {
+	source=$1
+	dest=`{basename -z `{strip $source}}
+	if(test -e $dest){
+		err ‘$dest’ already exists, not overwriting
+		exit 2
+	}
+	type=`` (/ $nl) {type $source}
+	switch($type(2)){
+	case gzip
+		<$source gzip -d >$dest
+	case x-xz
+		<$source xz -d >$dest
+	case x-lzma
+		<$source lzma -d >$dest
+	case x-bzip2
+		<$source bzip2 -d >$dest
+	case x-bzip2
+		<$source bzip2 -d >$dest
+	case x-tar
+		temp=`` ($nl) {mktemp -d -p .} 
+		<$source tar -C $temp -x
+		fix_archive $temp $dest
+	case zip
+		temp=`` ($nl) {mktemp -d -p .} 
+		unzip -q $source -d $temp
+		fix_archive $temp $dest
+	case *' '*	# error messages
+		exit 1
+	case *
+		return 0
+	}
+	test -w $source && rm -- $source
+	test -f $dest && unpack $dest
+}
+
+while(~ $1 -*){
+	switch($1){
+	case -h --help -help
+		help $0
+		exit 1
+	case --
+		shift
+		break
+	case *
+		echo Unknown option: $1 >[1=2]
+		help $0
+		exit 1
+	}
+}
+
+fn map {
+	func=$1; shift
+	for(a in $*){ $func $a }
+}
+
+originals=$*
+
+switch($0){
+case *test; run_tests
+case *unpack; map unpack $originals
+case *; map pack $originals
+}
+
