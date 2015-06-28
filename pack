@@ -70,8 +70,8 @@ fn unpack {
 	if(! ~ $dop ()){
 		temp=`` ($nl) {mktemp -d -p .} 
 		$dop $temp || exit 1
-		files=($temp/*)
-		if(~ $#files 1){
+		files=($temp/* $temp/.*)
+		if(~ $#files 3){
 			mv -- $files(1) $dest
 			rm -rf -- $temp
 		} else {
