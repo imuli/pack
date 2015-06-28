@@ -61,7 +61,7 @@ fn unpack {
 
 	if(! ~ $dop ()){
 		temp=`` ($nl) {mktemp -d -p .} 
-		$dop $temp
+		$dop $temp || exit 1
 		files=($temp/*)
 		if(~ $#files 1){
 			mv -- $files(1) $dest
@@ -73,7 +73,7 @@ fn unpack {
 	dop=()
 
 	if(! ~ $fop ()){
-		$fop < $source > $dest
+		$fop < $source > $dest || exit 1
 	}
 	fop=()
 
