@@ -34,7 +34,15 @@ fn help {
 }
 
 fn pack {
-	help $0
+	source=`{realpath -z $1}
+	dest=`{basename -z $source}
+	~ $1 . && dest=../$dest
+	test -d $source && {
+		tar -C `{dirname -z $source} -c `{basename -z $source} | xz > $dest.tar.xz
+	}
+	test -f $source && {
+		xz < $source > $dest.xz
+	}
 }
 
 fn unpack {
