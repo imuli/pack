@@ -37,50 +37,48 @@ fn pack {
 	help $0
 }
 
-fn fix_archive {
-	$temp=$1; $dest=$2; files=($temp/*)
-	if(~ $#files 1){
-		mv -- $files(1) $dest
-		rm -rf -- $temp
-	} else {
-		mv -- $temp $dest
-	}
-}
-
 fn unpack {
 	source=$1
-	dest=`{basename -z `{strip $source}}
-	if(test -e $dest){
-		err ‘$dest’ already exists, not overwriting
-		exit 2
-	}
 	type=`` (/ $nl) {type $source}
 	switch($type(2)){
-	case gzip
-		<$source gzip -d >$dest
-	case x-xz
-		<$source xz -d >$dest
-	case x-lzma
-		<$source lzma -d >$dest
-	case x-bzip2
-		<$source bzip2 -d >$dest
-	case x-bzip2
-		<$source bzip2 -d >$dest
-	case x-tar
-		temp=`` ($nl) {mktemp -d -p .} 
-		<$source tar -C $temp -x
-		fix_archive $temp $dest
-	case zip
-		temp=`` ($nl) {mktemp -d -p .} 
-		unzip -q $source -d $temp
-		fix_archive $temp $dest
+	case gzip;	fop=(gzip -d)
+	case x-xz;	fop=(xz -d)
+	case x-lzma;	fop=(lzma -d)
+	case x-bzip2;	fop=(bzip2 -d)
+	case x-tar;	dop=(tar -x -f $source -C)
+	case zip;	dop=(unzip -q $source -d)
 	case ''	# error
 		exit 1
 	case *
 		return 0
 	}
+
+	dest=`{basename -z `{strip $source}}
+	if(test -e $dest){
+		err ‘$dest’ already exists, not overwriting
+		exit 2
+	}
+
+	if(! ~ $dop ()){
+		temp=`` ($nl) {mktemp -d -p .} 
+		$dop $temp
+		files=($temp/*)
+		if(~ $#files 1){
+			mv -- $files(1) $dest
+			rm -rf -- $temp
+		} else {
+			mv -- $temp $dest
+		}
+	}
+	dop=()
+
+	if(! ~ $fop ()){
+		$fop < $source > $dest
+	}
+	fop=()
+
 	test -w $source && rm -- $source
-	test -f $dest && unpack $dest
+	unpack $dest
 }
 
 while(~ $1 -*){
