@@ -1,5 +1,11 @@
 #!/usr/bin/rc
 
+if(test `{file -v | sed -E 's/file-//;s/\.([0-9])$/0\1/;s/\.//;q'} -lt 518){
+	file=file
+} else {
+	file=(file -E)
+}
+
 ifs=()
 nl='
 '
@@ -13,7 +19,7 @@ fn strip {
 }
 
 fn type {
-	file -b --mime-type -- $1
+	$file -b --mime-type -- $1
 }
 
 fn help {
@@ -68,7 +74,7 @@ fn unpack {
 		temp=`` ($nl) {mktemp -d -p .} 
 		unzip -q $source -d $temp
 		fix_archive $temp $dest
-	case *' '*	# error messages
+	case ''	# error
 		exit 1
 	case *
 		return 0
