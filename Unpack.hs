@@ -2,6 +2,7 @@
 
 module Main where
 
+import Control.Exception
 import Control.Monad
 import Data.Maybe
 import HFlags
@@ -47,10 +48,10 @@ extract filetype file =
          LZMA -> extractFile "lzma" ["-dc", "--", file]
          XZ -> extractFile "xz" ["-dc", "--", file]
          TAR -> extractDir "tar" ["-xf", file]
-         ZIP -> extractDir "unzip" ["--", file]
-         _ -> fail
+         ZIP -> extractDir "unzip" ["-q", "--", file]
+         _ -> fail file
   where
-    fail _ = return $ ExitFailure 1 -- FIXME
+    fail file _ = error $ file ++ ": Attempted to extract a file of unknown type."
 
 tempDir :: IO String
 tempDir = do
@@ -66,14 +67,13 @@ getFileType file = do
          Unknown -> return Unknown -- FIXME implement
          x -> return x
 
-renameTo :: FilePath -> FilePath -> IO ()
-renameTo dest dir = do
+renameClever :: FilePath -> FilePath -> IO ()
+renameClever dir dest = do
     files <- liftM (filter isRealEntry) (getDirectoryContents dir)
     case length files of
-         0 -> removeDirectory dir
-         1 -> do renameFile (dir ++ "/" ++ head files) dest
-                 removeDirectory dir
-         _ -> renameFile dir dest
+         0 -> return ()
+         1 -> renamePath (dir ++ "/" ++ head files) dest
+         _ -> renameDirectory dir dest
   where
     isRealEntry name = case name of
                             "." -> False
@@ -89,10 +89,29 @@ maybeRemoveFile file = do
 
 checkDestination :: FilePath -> IO ()
 checkDestination file = do
-    exists <- doesFileExist file
-    case flags_force || not exists of
-         False -> exitWith $ ExitFailure 1 -- FIXME
+    isfile <- doesFileExist file
+    isdir <- doesDirectoryExist file
+    case flags_force || not (isfile || isdir) of
+         False -> error $ file ++ ": Already Exists."
          True -> return ()
+
+renamePath :: FilePath -> FilePath -> IO ()
+renamePath path dest = do
+    isfile <- doesFileExist path
+    isdir <- doesDirectoryExist path
+    case (isfile, isdir) of
+        (True, False) -> renameFile path dest
+        (False, True) -> renameDirectory path dest
+        _ -> return ()
+
+purgePath :: FilePath -> IO ()
+purgePath path = do
+    isfile <- doesFileExist path
+    isdir <- doesDirectoryExist path
+    case (isfile, isdir) of
+        (True, False) -> removeFile path
+        (False, True) -> removeDirectoryRecursive path
+        _ -> return ()
 
 unpack :: FilePath -> IO ()
 unpack relfile = do
@@ -100,15 +119,15 @@ unpack relfile = do
     let dest = takeBaseName file in do
         checkDestination dest
         filetype <- getFileType file
-        dir <- tempDir
-        r <- extract filetype file dir
-        case r of
-             ExitSuccess -> do
-                            renameTo dest dir
-                            maybeRemoveFile file
-             x -> do 
-                  removeDirectoryRecursive dir
-                  exitWith x
+        bracket tempDir purgePath ( \dir -> do
+            r <- extract filetype file dir
+            case r of
+                 ExitSuccess -> do
+                                renameClever dir dest
+                                maybeRemoveFile file
+                 x -> do 
+                      exitWith x
+            )
 
 main :: IO ()
 main = do
