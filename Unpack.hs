@@ -105,19 +105,11 @@ renameClever dir dest = do
                             ".." -> False
                             _ -> True
 
-maybeRemoveFile :: FilePath -> IO ()
-maybeRemoveFile file = do
+maybeRemoveFile :: Int -> FilePath -> IO ()
+maybeRemoveFile depth file = do
     p <- getPermissions file
-    case flags_keep || (not . writable) p of
+    case depth == 0 && (flags_keep || (not . writable) p) of
          False -> removeFile file
-         True -> return ()
-
-checkDestination :: FilePath -> IO ()
-checkDestination file = do
-    isfile <- doesFileExist file
-    isdir <- doesDirectoryExist file
-    case flags_force || not (isfile || isdir) of
-         False -> error $ file ++ ": Already Exists."
          True -> return ()
 
 renamePath :: FilePath -> FilePath -> IO ()
@@ -138,26 +130,36 @@ purgePath path = do
         (False, True) -> removeDirectoryRecursive path
         _ -> return ()
 
-unpack :: Magic -> FilePath -> IO ()
-unpack magic relfile = do
+unpack :: Int -> Magic -> FilePath -> IO ()
+unpack depth magic relfile = do
     file <- canonicalizePath relfile
     let dest = takeBaseName file in do
-        checkDestination dest
         filetype <- getFileType magic file
+        doChecks depth dest filetype
         bracket tempDir purgePath ( \dir -> do
             r <- extract filetype file dir
-            case r of
-                 ExitSuccess -> do
-                                renameClever dir dest
-                                maybeRemoveFile file
-                 x -> do 
-                      exitWith x
+            if r == ExitSuccess
+                then do renameClever dir dest
+                        maybeRemoveFile depth file
+                        unpack (depth+1) magic dest
+                else exitWith r
             )
+  where
+    doChecks depth file filetype = do
+        isfile <- doesFileExist file
+        isdir <- doesDirectoryExist file
+        case (depth, flags_force || not (isfile || isdir), filetype) of
+             (0, False, _) -> error $ file ++ ": Already Exists."
+             (0, _, Unknown) -> error $ file ++ ": Unknown Format."
+             (_, False, _) -> exitWith ExitSuccess
+             (_, _, Unknown) -> exitWith ExitSuccess 
+             (_, True, _) -> return ()
+
 
 main :: IO ()
 main = do
     _ <- $initHFlags "unpack 0.1"
     magic <- magicOpen [MagicMimeType]
     magicLoadDefault magic
-    mapM_ (unpack magic) arguments
+    mapM_ (unpack 0 magic) arguments
 
