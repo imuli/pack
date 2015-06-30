@@ -10,21 +10,27 @@ pack(1)
 ## DESCRIPTION
 
 `pack` and `unpack` are archive and compression utilities with sane defaults.
-`pack` compresses each specified file or directory into it's own archive.
+
+`pack` creates an archive containing all the specified files, with a sensible name.
+
 `unpack` extracts each file into a file (if it contains only one file) or directory (otherwise) with that name.
 
 ## OPTIONS
 
 * `--`
 	All following arguments are files.
+* `-f`, `--format`
+	Force use of this format.
 * `-h`, `-help`, `--help`
 	Display help.
 * `-k`
 	Keep original file.
+* `-v`, `-verbose`
+	Be noisy.
 
 ## BUGS
 
-* Currently written in rc shell.
+* Everything
 * External programs are almost universally insecure.
 
 ## COPYRIGHT
