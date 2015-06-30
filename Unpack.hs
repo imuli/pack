@@ -4,17 +4,40 @@ module Main where
 
 import Control.Exception
 import Control.Monad
+import Data.Char
 import Data.Maybe
 import HFlags
+import Magic
 import System.Directory
 import System.Exit
 import System.FilePath
 import System.IO
 import System.Process
 import System.Random
+import Text.Read
+import Text.ParserCombinators.ReadP (string, munch)
 
 data FileType = Unknown | GZIP | BZIP2 | LZMA | XZ | TAR | ZIP
-        deriving (Read, Show)
+        deriving (Show, Enum)
+
+instance Read FileType where
+    readPrec = (choice $ map strVal [ ("octet-stream", Unknown)
+                                    , ("bzip2", BZIP2)
+                                    , ("gzip", GZIP)
+                                    , ("lzma", LZMA)
+                                    , ("xz", XZ)
+                                    , ("tar", TAR)
+                                    , ("zip", ZIP)
+                                    ]) <++ allElse Unknown
+      where
+        strVal (x, y) = lift $ string x >> return y
+        allElse y = lift $ munch (\_ -> True) >> return y
+
+normFiletype :: String -> String
+normFiletype filetype = case map toLower filetype of
+    ('a':'p':'p':'l':'i':'c':'a':'t':'i':'o':'n':'/':xs) -> normFiletype xs
+    ('x':'-':xs) -> normFiletype xs
+    x -> x
 
 defineEQFlag "t:type" [| Unknown :: FileType |] "type" "Force file type."
 defineFlag "k:keep" False "Keep original file."
@@ -61,10 +84,12 @@ tempDir = do
         createDirectory name
         return name
 
-getFileType :: FilePath -> IO FileType
-getFileType file = do
+getFileType :: Magic -> FilePath -> IO FileType
+getFileType magic file = do
     case flags_type of
-         Unknown -> return Unknown -- FIXME implement
+         Unknown -> do
+                    mimetype <- magicFile magic file
+                    return (read $ normFiletype mimetype :: FileType)
          x -> return x
 
 renameClever :: FilePath -> FilePath -> IO ()
@@ -113,12 +138,12 @@ purgePath path = do
         (False, True) -> removeDirectoryRecursive path
         _ -> return ()
 
-unpack :: FilePath -> IO ()
-unpack relfile = do
+unpack :: Magic -> FilePath -> IO ()
+unpack magic relfile = do
     file <- canonicalizePath relfile
     let dest = takeBaseName file in do
         checkDestination dest
-        filetype <- getFileType file
+        filetype <- getFileType magic file
         bracket tempDir purgePath ( \dir -> do
             r <- extract filetype file dir
             case r of
@@ -132,5 +157,7 @@ unpack relfile = do
 main :: IO ()
 main = do
     _ <- $initHFlags "unpack 0.1"
-    mapM_ unpack arguments
+    magic <- magicOpen [MagicMimeType]
+    magicLoadDefault magic
+    mapM_ (unpack magic) arguments
 
