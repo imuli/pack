@@ -40,9 +40,9 @@ normFiletype filetype = case map toLower filetype of
     x -> x
 
 defineEQFlag "t:type" [| Unknown :: FileType |] "type" "Force file type."
-defineFlag "k:keep" False "Keep original file."
-defineFlag "f:force" False "Force overwrite."
-defineFlag "v:verbose" False "List files as they are unpacked."
+defineEQFlag "k:keep" [| False :: Bool |] "" "Keep original file."
+defineEQFlag "f:force" [| False :: Bool |] "" "Force overwrite."
+defineEQFlag "v:verbose" [| False :: Bool |] "" "List files as they are unpacked."
 return[]
 
 -- | extract into a directory
@@ -158,7 +158,7 @@ unpack depth magic relfile = do
 
 main :: IO ()
 main = do
-    _ <- $initHFlags "unpack 0.1"
+    _ <- $initHFlags "unpack 0.1\n\n\tunpack [options] [files]"
     magic <- magicOpen [MagicMimeType]
     magicLoadDefault magic
     mapM_ (unpack 0 magic) arguments
