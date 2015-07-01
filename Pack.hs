@@ -41,33 +41,8 @@ compact filetype files =
   where
     fail _ _ = error $ "Attempted to compact to a file of unknown type."
 
-commonPrefix :: [FilePath] -> FilePath
-commonPrefix files =
-    joinPath $ foldl1 (prefix []) $ map splitDirectories files
-  where
-    prefix p [] _ = p
-    prefix p _ [] = p
-    prefix p (x:xs) (y:ys) = if x == y
-                                 then x : prefix p xs ys
-                                 else p
-
 removePrefix :: FilePath -> FilePath -> FilePath
 removePrefix common path = drop (length common) path
-
-doesPathExist :: FilePath -> IO Bool
-doesPathExist path = do
-    isfile <- doesFileExist path
-    isdir <- doesDirectoryExist path
-    return $ isfile || isdir
-
-purgePath :: FilePath -> IO ()
-purgePath path = do
-    isfile <- doesFileExist path
-    isdir <- doesDirectoryExist path
-    case (isfile, isdir) of
-        (True, False) -> removeFile path
-        (False, True) -> removeDirectoryRecursive path
-        _ -> return ()
 
 removeIntermediaries :: Int -> [FilePath] -> IO ()
 removeIntermediaries 0 _ = return ()

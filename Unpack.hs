@@ -15,6 +15,7 @@ import System.Process
 import System.Random
 
 import FileType
+import Path
 
 defineEQFlag "t:type" [| Unknown :: FileType |] "type" "Force file type."
 defineFlag "k:keep" False "Keep original file."
@@ -87,24 +88,6 @@ maybeRemoveFile depth file = do
     case depth == 0 && (flags_keep || (not . writable) p) of
          False -> removeFile file
          True -> return ()
-
-renamePath :: FilePath -> FilePath -> IO ()
-renamePath path dest = do
-    isfile <- doesFileExist path
-    isdir <- doesDirectoryExist path
-    case (isfile, isdir) of
-        (True, False) -> renameFile path dest
-        (False, True) -> renameDirectory path dest
-        _ -> return ()
-
-purgePath :: FilePath -> IO ()
-purgePath path = do
-    isfile <- doesFileExist path
-    isdir <- doesDirectoryExist path
-    case (isfile, isdir) of
-        (True, False) -> removeFile path
-        (False, True) -> removeDirectoryRecursive path
-        _ -> return ()
 
 unpack :: Int -> Magic -> FilePath -> IO ()
 unpack depth magic relfile = do
