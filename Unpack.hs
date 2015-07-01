@@ -43,18 +43,27 @@ extractFile cmd args dest = do
 extract :: FileType -> FilePath -> FilePath -> IO ExitCode
 extract filetype file =
     case filetype of
-    	 7Z -> extractDir "7z" ["x", "--", file]
-         ACE -> extractFile "unace" ["x", file] -- cannot quote filename
-         ADF -> extractFile "unadf" [file] -- cannot quote filename
-         ALZ -> extractFile "unalz" [file] -- cannot quote filename, untested
-         ARC -> extractFile "arc" ["x", file] -- cannot quote filename
-         ARJ -> extractFile "arj" ["x", file] -- cannot quote filename
-         GZIP -> extractFile "gzip" ["-dc", "--", file]
+    	 A7Z -> extractDir "7z" ["x", "--", file]
+         ACE -> extractFile "unace" ["x", file]
+         ADF -> extractFile "unadf" [file]
+         ALZ -> extractFile "unalz" [file]
+         ARC -> extractFile "arc" ["x", file]
+         ARJ -> extractFile "arj" ["x", file]
          BZIP2 -> extractFile "bzip2" ["-dc", "--", file]
+         CAB -> extractDir "cabextract" ["-q", "--", file]
+         GZIP -> extractFile "gzip" ["-dc", "--", file]
+         KGB -> extractDir "kgb" [file]
+         LHA -> extractDir "lha" ["-x", file]
+         LZIP -> extractFile "lzip" ["-dc", "--", file]
          LZMA -> extractFile "lzma" ["-dc", "--", file]
-         XZ -> extractFile "xz" ["-dc", "--", file]
+         LZOP -> extractFile "lzop" ["-dc", "--", file]
+         RAR -> extractFile "unrar" ["x", file]
          TAR -> extractDir "tar" ["-xf", file]
+         DMS -> extractDir "xdms" ["-q", "x", file]
+         XZ -> extractFile "xz" ["-dc", "--", file]
          ZIP -> extractDir "unzip" ["-q", "--", file]
+         ZOO -> extractFile "zoo" ["qx", file]
+         ZPAQ -> extractFile "zpaq" ["qx", file]
          _ -> fail file
   where
     fail file _ = error $ file ++ ": Attempted to extract a file of unknown type."

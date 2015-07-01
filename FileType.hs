@@ -7,7 +7,7 @@ import Text.Read (Read(..), lift)
 import Text.ParserCombinators.ReadP hiding (lift)
 
 data FileType = Unknown
-	      | 7Z
+	      | A7Z
 	      | ACE
 	      | ADF
 	      | ALZ
@@ -15,7 +15,7 @@ data FileType = Unknown
 	      | ARJ
               | BZIP2
 	      | CAB
-	      | COMPRESS
+	      | COMP
 	      | EXT2
 	      | GZIP
 	      | HFS
@@ -32,7 +32,7 @@ data FileType = Unknown
 	      | SHIELD
               | TAR
 	      | VMFS
-	      | XDMS
+	      | DMS
               | XZ
               | ZIP
 	      | ZOO
@@ -41,18 +41,39 @@ data FileType = Unknown
 
 names :: [(FileType, String)]
 names = [ (Unknown, "Unknown")
-	, (7Z, "7z")
-	, (7Z, "7z-compressed")
+	, (A7Z, "7z")
+	, (A7Z, "7z-compressed")
+	, (ADF, "adf")
 	, (ARC, "arc")
 	, (ARJ, "arj")
 	, (BZIP2, "bz2")
         , (BZIP2, "bzip2")
+	, (CAB, "cab")
+	, (CAB, "vnd.ms-cab-compressed")
+        , (DMS, "dms")
+	, (COMP, "Z")
+	, (COMP, "z")
+	, (COMP, "compress")
         , (GZIP, "gz")
         , (GZIP, "gzip")
+        , (KGB, "kgb")
+        , (LHA, "lzh")
+        , (LHA, "lha")
+        , (LHA, "lzs")
+        , (LHA, "pma")
+        , (LZIP, "lz")
+        , (LZIP, "lzip")
         , (LZMA, "lzma")
-        , (XZ, "xz")
+        , (LZOP, "lzo")
+        , (LZOP, "lzop")
+        , (RAR, "rar")
+        , (RZIP, "rz")
+        , (RZIP, "rzip")
         , (TAR, "tar")
+        , (XZ, "xz")
         , (ZIP, "zip")
+        , (ZOO, "zoo")
+        , (ZPAQ, "zpaq")
         ]
 
 instance Show FileType where

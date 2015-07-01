@@ -12,15 +12,24 @@ import System.IO
 import System.Process
 
 import FileType
+import Path
 
 defineEQFlag "t:type" [| [TAR, XZ] :: [FileType] |] "type" "Formats"
 defineEQFlag "f:force" [| False :: Bool |] "" "Force overwrite."
 defineEQFlag "n:name" [| "" :: String |] "[name]" "Output Base Name"
 return[]
 
--- | extract into a file in specifile directory
-compactPath :: String -> [String] -> FilePath -> FilePath -> IO ExitCode
-compactPath cmd args dest dir = do
+-- | programs that require a filename
+compactPath :: String -> [String] -> FilePath -> IO ExitCode
+compactPath cmd args dir = do
+    (_,_,_,p) <- createProcess (proc cmd args){ cwd = Just dir
+                                              , close_fds = True
+                                              }
+    waitForProcess p
+
+-- | programs that compress to standard output
+compactPipe :: FilePath -> String -> [String] -> FilePath -> IO ExitCode
+compactPipe dest cmd args dir = do
     destH <- openBinaryFile dest WriteMode
     (_,_,_,p) <- createProcess (proc cmd args){ cwd = Just dir
                                               , close_fds = True
@@ -29,20 +38,31 @@ compactPath cmd args dest dir = do
     waitForProcess p
 
 compact :: FileType -> [FilePath] -> FilePath -> FilePath -> IO ExitCode
-compact filetype files =
+compact filetype files dest =
     case filetype of
-    	 7Z -> error "7z cannot compress to stdout."
-    	 ARC -> error "ARC cannot compress to stdout."
-    	 ARJ -> error "ARJ cannot compress to stdout."
-         BZIP2 -> compactPath "bzip2" $ ["-c", "--"] ++ files
-         GZIP -> compactPath "gzip" $ ["-c", "--"] ++ files
-         LZMA -> compactPath "lzma" $ ["-c", "--"] ++ files
-         TAR -> compactPath "tar" $ ["-c"] ++ files
-         XZ -> compactPath "xz" $ ["-c", "--"] ++ files
-         ZIP -> compactPath "zip" $ ["-q", "-r", "-", "--"] ++ files
+    	 A7Z 	-> path "7z"       $ ["a", dest ] ++ files
+    	 ARC 	-> path "arc"      $ ["a", dest ] ++ files
+    	 ARJ 	-> path "arj"      $ ["a", dest ] ++ files
+         BZIP2 	-> pipe "bzip2"    $ ["-c", "--"] ++ files
+    	 CAB 	-> path "lcab"	   $ ["-qr", "--"] ++ files ++ [dest]
+         COMP 	-> pipe "compress" $ ["-c", "--"] ++ files
+         GZIP  	-> pipe "gzip"     $ ["-c", "--"] ++ files
+         KGB  	-> path "kgb"      $ dest : files
+         LZIP  	-> pipe "lzip"     $ ["-c", "--"] ++ files
+         LZMA  	-> pipe "lzma"     $ ["-c", "--"] ++ files
+         LZOP  	-> pipe "lzop"     $ ["-c", "--"] ++ files
+         TAR	-> pipe "tar"      $ ["-c"] ++ files
+    	 RAR 	-> path "rar"      $ ["a", dest ] ++ files
+    	 RZIP 	-> path "rzip"     $ ["-k", "-o", dest ] ++ files
+         XZ	-> pipe "xz"       $ ["-c", "--"] ++ files
+         ZIP	-> path "zip"      $ ["-qr", dest, "--"] ++ files
+    	 ZOO 	-> path "zoo"      $ ["qa", dest ] ++ files
+    	 ZPAQ 	-> path "zpaq"     $ ["qc", dest ] ++ files
          _ -> fail files
   where
-    fail _ _ = error $ "Attempted to compact to a file of unknown type."
+    pipe = compactPipe dest
+    path = compactPath
+    fail _ = error $ "Attempted to compact to a file of unknown type."
 
 removePrefix :: FilePath -> FilePath -> FilePath
 removePrefix common path = drop (length common) path
@@ -70,7 +90,7 @@ pack depth types absfiles = do
                 pack (depth+1) (tail types) [absdest]
         else exitWith r
   where
-    prefix = commonPrefix absfiles
+    prefix = commonPath absfiles
     dir = (takeDirectory prefix) ++ "/"
     files = map (removePrefix dir) absfiles
     filetype = (head types)
