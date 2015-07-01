@@ -40,27 +40,30 @@ compactPipe dest cmd args dir = do
 compact :: FileType -> [FilePath] -> FilePath -> FilePath -> IO ExitCode
 compact filetype files dest =
     case filetype of
-    	 A7Z 	-> path "7z"       $ ["a", dest ] ++ files
-    	 ARC 	-> path "arc"      $ ["a", dest ] ++ files
-    	 ARJ 	-> path "arj"      $ ["a", dest ] ++ files
-         BZIP2 	-> pipe "bzip2"    $ ["-c", "--"] ++ files
-    	 CAB 	-> path "lcab"	   $ ["-qr", "--"] ++ files ++ [dest]
-         COMP 	-> pipe "compress" $ ["-c", "--"] ++ files
-         GZIP  	-> pipe "gzip"     $ ["-c", "--"] ++ files
-         KGB  	-> path "kgb"      $ dest : files
-         LZIP  	-> pipe "lzip"     $ ["-c", "--"] ++ files
-         LZMA  	-> pipe "lzma"     $ ["-c", "--"] ++ files
-         LZOP  	-> pipe "lzop"     $ ["-c", "--"] ++ files
-         TAR	-> pipe "tar"      $ ["-c"] ++ files
-    	 RAR 	-> path "rar"      $ ["a", dest ] ++ files
-    	 RZIP 	-> path "rzip"     $ ["-k", "-o", dest ] ++ files
-         XZ	-> pipe "xz"       $ ["-c", "--"] ++ files
-         ZIP	-> path "zip"      $ ["-qr", dest, "--"] ++ files
-    	 ZOO 	-> path "zoo"      $ ["qa", dest ] ++ files
-    	 ZPAQ 	-> path "zpaq"     $ ["qc", dest ] ++ files
+         AR    -> path "ar"       $ ["rc", dest] ++ files
+         A7Z   -> path "7z"       $ ["a", "-r", dest] ++ files
+         ARC   -> dos  "arc"
+         ARJ   -> dos  "arj"
+         BZIP2 -> gz   "bzip2"
+         CAB   -> path "lcab"     $ ["-r"] ++ files ++ [dest]
+         COMP  -> gz   "compress"
+         GZIP  -> gz   "gzip"
+         KGB   -> path "kgb"      $ dest : files
+         LRZIP -> path "lrzip"    $ ["-o", dest] ++ files
+         LZIP  -> gz   "lzip"
+         LZMA  -> gz   "lzma"
+         LZOP  -> gz   "lzop"
+         RAR   -> dos  "rar"
+         RZIP  -> path "rzip"     $ ["-k", "-o", dest ] ++ files
+         TAR   -> gz   "tar"
+         XZ    -> gz   "xz"
+         ZIP   -> path "zip"      $ ["-r", dest] ++ files
+         ZOO   -> dos  "zoo"
+         ZPAQ  -> dos  "zpaq"
          _ -> fail files
   where
-    pipe = compactPipe dest
+    gz cmd = compactPipe dest cmd $ ["-c"] ++ files
+    dos cmd = compactPath cmd $ ["a", dest ] ++ files
     path = compactPath
     fail _ = error $ "Unable to compress " ++ show filetype ++ "."
 

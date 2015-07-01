@@ -7,53 +7,64 @@ import Text.Read (Read(..), lift)
 import Text.ParserCombinators.ReadP hiding (lift)
 
 data FileType = Unknown
-	      | A7Z
-	      | ACE
-	      | ADF
-	      | ALZ
-	      | ARC
-	      | ARJ
+              | A7Z
+              | ACE
+              | ADF
+              | ALZ
+              | AR
+              | ARC
+              | ARJ
               | BZIP2
-	      | CAB
-	      | COMP
-	      | EXT2
-	      | GZIP
-	      | HFS
-	      | HFS_PLUS
-	      | ISO
-	      | KGB
-	      | LHA
-	      | LZIP
+              | CAB
+              | COMP
+              | CPIO
+              | DEB
+              | DMS
+              | EXT2
+              | GZIP
+              | HFS
+              | HFS_PLUS
+              | ISO
+              | KGB
+              | LHA
+              | LRZIP
+              | LZIP
               | LZMA
-	      | LZOP
-	      | RAR
-	      | RZIP
-	      | SHAR
-	      | SHIELD
+              | LZOP
+              | RAR
+              | RZIP
+              | SHAR
+              | SHIELD
               | TAR
-	      | VMFS
-	      | DMS
+              | VMFS
               | XZ
               | ZIP
-	      | ZOO
-	      | ZPAQ
+              | ZOO
+              | ZPAQ
         deriving (Enum, Eq)
 
 names :: [(FileType, String)]
 names = [ (Unknown, "Unknown")
-	, (A7Z, "7z")
-	, (A7Z, "7z-compressed")
-	, (ADF, "adf")
-	, (ARC, "arc")
-	, (ARJ, "arj")
-	, (BZIP2, "bz2")
+        , (A7Z, "7z")
+        , (A7Z, "7z-compressed")
+        , (ACE, "ace")
+        , (ADF, "adf")
+        , (ALZ, "alz")
+        , (AR, "a")
+        , (AR, "archive")
+        , (ARC, "arc")
+        , (ARJ, "arj")
+        , (BZIP2, "bz2")
         , (BZIP2, "bzip2")
-	, (CAB, "cab")
-	, (CAB, "vnd.ms-cab-compressed")
+        , (CAB, "cab")
+        , (CAB, "vnd.ms-cab-compressed")
+        , (COMP, "Z")
+        , (COMP, "z")
+        , (COMP, "compress")
+        , (CPIO, "cpio")
+        , (DEB, "deb")
+        , (DEB, "vnd.debian.binary-package")
         , (DMS, "dms")
-	, (COMP, "Z")
-	, (COMP, "z")
-	, (COMP, "compress")
         , (GZIP, "gz")
         , (GZIP, "gzip")
         , (KGB, "kgb")
@@ -61,6 +72,8 @@ names = [ (Unknown, "Unknown")
         , (LHA, "lha")
         , (LHA, "lzs")
         , (LHA, "pma")
+        , (LRZIP, "lrz")
+        , (LRZIP, "lrzip")
         , (LZIP, "lz")
         , (LZIP, "lzip")
         , (LZMA, "lzma")

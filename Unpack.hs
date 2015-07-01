@@ -43,29 +43,38 @@ extractFile cmd args dest = do
 extract :: FileType -> FilePath -> FilePath -> IO ExitCode
 extract filetype file =
     case filetype of
-    	 A7Z -> extractDir "7z" ["x", "--", file]
-         ACE -> extractFile "unace" ["x", file]
-         ADF -> extractFile "unadf" [file]
-         ALZ -> extractFile "unalz" [file]
-         ARC -> extractFile "arc" ["x", file]
-         ARJ -> extractFile "arj" ["x", file]
-         BZIP2 -> extractFile "bzip2" ["-dc", "--", file]
-         CAB -> extractDir "cabextract" ["-q", "--", file]
-         GZIP -> extractFile "gzip" ["-dc", "--", file]
-         KGB -> extractDir "kgb" [file]
-         LHA -> extractDir "lha" ["-x", file]
-         LZIP -> extractFile "lzip" ["-dc", "--", file]
-         LZMA -> extractFile "lzma" ["-dc", "--", file]
-         LZOP -> extractFile "lzop" ["-dc", "--", file]
-         RAR -> extractFile "unrar" ["x", file]
-         TAR -> extractDir "tar" ["-xf", file]
-         DMS -> extractDir "xdms" ["-q", "x", file]
-         XZ -> extractFile "xz" ["-dc", "--", file]
-         ZIP -> extractDir "unzip" ["-q", "--", file]
-         ZOO -> extractFile "zoo" ["qx", file]
-         ZPAQ -> extractFile "zpaq" ["qx", file]
+         A7Z   -> dos  "7z"
+         ACE   -> dos  "unace"
+         ADF   -> bare "unadf"
+         ALZ   -> bare "unalz"
+         AR    -> dos  "ar"
+         ARC   -> dos  "arc"
+         ARJ   -> dos  "arj"
+         BZIP2 -> gz   "bzip2"
+         CAB   -> bare "cabextract"
+         COMP  -> gz   "compress"
+         DEB   -> path "dpkg-deb" ["-x", file, "."]
+         DMS   -> dos  "xdms"
+         GZIP  -> gz   "gzip"
+         KGB   -> bare "kgb"
+         LHA   -> dos  "lha"
+         LRZIP -> path "lrzip" ["-d", "-q", "-o", "file", file]
+         LZIP  -> gz   "lzip"
+         LZMA  -> gz   "lzma"
+         LZOP  -> gz   "lzop"
+         RAR   -> dos  "unrar"
+         RZIP  -> path "rzip"  ["-d", "-k", "-o", "file", file]
+         TAR   -> path "tar"   ["-xf", file]
+         XZ    -> gz   "xz"
+         ZIP   -> bare "unzip"
+         ZOO   -> dos  "zoo"
+         ZPAQ  -> dos  "zpaq"
          _ -> fail file
   where
+    gz cmd = extractFile cmd ["-dc", file]
+    dos cmd = extractDir cmd ["x", file]
+    bare cmd = extractDir cmd [file]
+    path = extractDir
     fail file _ = error $ file ++ ": Attempted to extract a file of unknown type."
 
 tempDir :: IO String
