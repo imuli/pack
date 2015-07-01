@@ -65,7 +65,7 @@ getFileType magic file = do
     case flags_type of
          Unknown -> do
                     mimetype <- magicFile magic file
-                    return (read $ normFiletype mimetype :: FileType)
+                    return (read mimetype :: FileType)
          x -> return x
 
 renameClever :: FilePath -> FilePath -> IO ()
