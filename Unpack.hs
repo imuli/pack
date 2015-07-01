@@ -4,7 +4,6 @@ module Main where
 
 import Control.Exception
 import Control.Monad
-import Data.Char
 import Data.Maybe
 import HFlags
 import Magic
@@ -14,35 +13,12 @@ import System.FilePath
 import System.IO
 import System.Process
 import System.Random
-import Text.Read
-import Text.ParserCombinators.ReadP (string, munch)
 
-data FileType = Unknown | GZIP | BZIP2 | LZMA | XZ | TAR | ZIP
-        deriving (Show, Enum)
-
-instance Read FileType where
-    readPrec = (choice $ map strVal [ ("octet-stream", Unknown)
-                                    , ("bzip2", BZIP2)
-                                    , ("gzip", GZIP)
-                                    , ("lzma", LZMA)
-                                    , ("xz", XZ)
-                                    , ("tar", TAR)
-                                    , ("zip", ZIP)
-                                    ]) <++ allElse Unknown
-      where
-        strVal (x, y) = lift $ string x >> return y
-        allElse y = lift $ munch (\_ -> True) >> return y
-
-normFiletype :: String -> String
-normFiletype filetype = case map toLower filetype of
-    ('a':'p':'p':'l':'i':'c':'a':'t':'i':'o':'n':'/':xs) -> normFiletype xs
-    ('x':'-':xs) -> normFiletype xs
-    x -> x
+import FileType
 
 defineEQFlag "t:type" [| Unknown :: FileType |] "type" "Force file type."
-defineEQFlag "k:keep" [| False :: Bool |] "" "Keep original file."
-defineEQFlag "f:force" [| False :: Bool |] "" "Force overwrite."
-defineEQFlag "v:verbose" [| False :: Bool |] "" "List files as they are unpacked."
+defineFlag "k:keep" False "Keep original file."
+defineFlag "f:force" False "Force overwrite."
 return[]
 
 -- | extract into a directory
