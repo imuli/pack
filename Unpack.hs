@@ -43,6 +43,12 @@ extractFile cmd args dest = do
 extract :: FileType -> FilePath -> FilePath -> IO ExitCode
 extract filetype file =
     case filetype of
+    	 7Z -> extractDir "7z" ["x", "--", file]
+         ACE -> extractFile "unace" ["x", file] -- cannot quote filename
+         ADF -> extractFile "unadf" [file] -- cannot quote filename
+         ALZ -> extractFile "unalz" [file] -- cannot quote filename, untested
+         ARC -> extractFile "arc" ["x", file] -- cannot quote filename
+         ARJ -> extractFile "arj" ["x", file] -- cannot quote filename
          GZIP -> extractFile "gzip" ["-dc", "--", file]
          BZIP2 -> extractFile "bzip2" ["-dc", "--", file]
          LZMA -> extractFile "lzma" ["-dc", "--", file]

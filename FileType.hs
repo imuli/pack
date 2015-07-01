@@ -6,11 +6,46 @@ import Data.Maybe
 import Text.Read (Read(..), lift)
 import Text.ParserCombinators.ReadP hiding (lift)
 
-data FileType = Unknown | GZIP | BZIP2 | LZMA | XZ | TAR | ZIP
+data FileType = Unknown
+	      | 7Z
+	      | ACE
+	      | ADF
+	      | ALZ
+	      | ARC
+	      | ARJ
+              | BZIP2
+	      | CAB
+	      | COMPRESS
+	      | EXT2
+	      | GZIP
+	      | HFS
+	      | HFS_PLUS
+	      | ISO
+	      | KGB
+	      | LHA
+	      | LZIP
+              | LZMA
+	      | LZOP
+	      | RAR
+	      | RZIP
+	      | SHAR
+	      | SHIELD
+              | TAR
+	      | VMFS
+	      | XDMS
+              | XZ
+              | ZIP
+	      | ZOO
+	      | ZPAQ
         deriving (Enum, Eq)
 
 names :: [(FileType, String)]
-names = [ (BZIP2, "bz2")
+names = [ (Unknown, "Unknown")
+	, (7Z, "7z")
+	, (7Z, "7z-compressed")
+	, (ARC, "arc")
+	, (ARJ, "arj")
+	, (BZIP2, "bz2")
         , (BZIP2, "bzip2")
         , (GZIP, "gz")
         , (GZIP, "gzip")

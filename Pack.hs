@@ -31,6 +31,9 @@ compactPath cmd args dest dir = do
 compact :: FileType -> [FilePath] -> FilePath -> FilePath -> IO ExitCode
 compact filetype files =
     case filetype of
+    	 7Z -> error "7z cannot compress to stdout."
+    	 ARC -> error "ARC cannot compress to stdout."
+    	 ARJ -> error "ARJ cannot compress to stdout."
          BZIP2 -> compactPath "bzip2" $ ["-c", "--"] ++ files
          GZIP -> compactPath "gzip" $ ["-c", "--"] ++ files
          LZMA -> compactPath "lzma" $ ["-c", "--"] ++ files
