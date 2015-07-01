@@ -62,7 +62,7 @@ compact filetype files dest =
   where
     pipe = compactPipe dest
     path = compactPath
-    fail _ = error $ "Attempted to compact to a file of unknown type."
+    fail _ = error $ "Unable to compress " ++ show filetype ++ "."
 
 removePrefix :: FilePath -> FilePath -> FilePath
 removePrefix common path = drop (length common) path
@@ -83,10 +83,10 @@ pack :: Int -> [FileType] -> [FilePath] -> IO ()
 pack _ [] _ = return ()
 pack depth types absfiles = do
     ensureNoPath dest
-    r <- compact filetype files dest dir
+    absdest <- absolutePath dest
+    r <- compact filetype files absdest dir
     if r == ExitSuccess
         then do removeIntermediaries depth files
-                absdest <- canonicalizePath dest
                 pack (depth+1) (tail types) [absdest]
         else exitWith r
   where
@@ -101,5 +101,5 @@ pack depth types absfiles = do
 main :: IO ()
 main = do
     _ <- $initHFlags "pack 0.1\n\n\tpack [options] [files]"
-    absfiles <- mapM canonicalizePath arguments
+    absfiles <- mapM absolutePath arguments
     pack 0 flags_type absfiles

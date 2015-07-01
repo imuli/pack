@@ -3,6 +3,7 @@ module Path (
   doesPathExist,
   purgePath,
   renamePath,
+  absolutePath,
   ) where
 
 import Data.Maybe
@@ -54,3 +55,9 @@ renamePath path dest = do
         Just Dir -> renameDirectory path dest
         _ -> return ()
 
+absolutePath :: FilePath -> IO FilePath
+absolutePath = fmap normalise . absolutePath'
+  where
+    absolutePath' path
+      | isRelative path = fmap (</> path) getCurrentDirectory
+      | otherwise       = return path

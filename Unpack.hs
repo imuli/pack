@@ -106,7 +106,7 @@ maybeRemoveFile depth file = do
 
 unpack :: Int -> Magic -> FilePath -> IO ()
 unpack depth magic relfile = do
-    file <- canonicalizePath relfile
+    file <- absolutePath relfile
     let dest = takeBaseName file in do
         filetype <- getFileType magic file
         doChecks depth dest filetype
