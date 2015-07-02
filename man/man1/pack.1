@@ -1,0 +1,173 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "PACK" "1" "July 2015" "" ""
+.
+.SH "NAME"
+\fBpack\fR \- pack and unpack archives
+.
+.SH "SYNOPSIS"
+\fBpack\fR [options] [files\.\.\.]
+.
+.P
+\fBunpack\fR [options] [files\.\.\.]
+.
+.SH "DESCRIPTION"
+\fBpack\fR builds an archive from all the specified files\. The files’ common prefix is removed, except for the last entry, which is also taken as the default base for the filename\.
+.
+.P
+\fBunpack\fR extracts files from archives with sane defaults\. It ensures that there is exactly one new file in the current directory, with the basename of the archive\.
+.
+.SH "OPTIONS"
+.
+.SS "common"
+.
+.TP
+\fB\-f\fR, \fB\-\-force\fR
+Overwrite already existing files\.
+.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Display help\.
+.
+.SS "pack"
+.
+.TP
+\fB\-n\fR, \fB\-\-name\fR \fBname\fR
+Use \fBname\fR as the basename for the archive instead of the last shared directory entry\.
+.
+.TP
+\fB\-t\fR, \fB\-\-type\fR
+Create archive of this type instead of \fBtar\.xz\fR\.
+.
+.SS "unpack"
+.
+.TP
+\fB\-k\fR, \fB\-\-keep\fR
+Preserve the original archive\.
+.
+.TP
+\fB\-t\fR, \fB\-\-type\fR
+Extract from the outermost (matching) archives\.
+.
+.IP
+\fBunpack \-t gz hello\.tar\.gz\fR
+.
+.IP
+will yeild \fBhello\.tar\fR not a directory named \fBhello\fR\.
+.
+.SH "FILE FORMATS"
+.
+.SS "pack and unpack"
+.
+.IP "\(bu" 4
+7zip: \fB\.7z\fR 7z(1)
+.
+.IP "\(bu" 4
+archive: \fB\.a\fR ar(1)
+.
+.IP "\(bu" 4
+arc: \fB\.arc\fR arc(1)
+.
+.IP "\(bu" 4
+arj: \fB\.arj\fR arj(1)
+.
+.IP "\(bu" 4
+bzip2: \fB\.bz2\fR bzip2(1)
+.
+.IP "\(bu" 4
+cab: \fB\.cab\fR lcab(1) cabextract(1)
+.
+.IP "\(bu" 4
+compress: \fB\.Z\fR compress(1)
+.
+.IP "\(bu" 4
+gzip: \fB\.gz\fR gzip(1)
+.
+.IP "\(bu" 4
+kgb: \fB\.kgb\fR kgb(1)
+.
+.IP "\(bu" 4
+lrzip: \fB\.lrz\fR lrzip(1)
+.
+.IP "\(bu" 4
+lzip: \fB\.lz\fR lzip(1)
+.
+.IP "\(bu" 4
+lzma: \fB\.lzma\fR lzma(1)
+.
+.IP "\(bu" 4
+lzop: \fB\.lzo\fR lzop(1)
+.
+.IP "\(bu" 4
+rar: \fB\.rar\fR rar(1) unrar(1)
+.
+.IP "\(bu" 4
+rzip: \fB\.rz\fR rzip(1)
+.
+.IP "\(bu" 4
+tar: \fB\.tar\fR tar(1)
+.
+.IP "\(bu" 4
+xz: \fB\.xz\fR xz(1)
+.
+.IP "\(bu" 4
+zip: \fB\.zip\fR zip(1) unzip(1)
+.
+.IP "\(bu" 4
+zoo: \fB\.zoo\fR zoo(1)
+.
+.IP "\(bu" 4
+zpaq: \fB\.zpaq\fR zpaq(1)
+.
+.IP "" 0
+.
+.SS "unpack only"
+.
+.IP "\(bu" 4
+ace: \fB\.ace\fR unace(1)
+.
+.IP "\(bu" 4
+adf: \fB\.adf\fR unadf(1)
+.
+.IP "\(bu" 4
+alz: \fB\.alz\fR unalz(1)
+.
+.IP "\(bu" 4
+deb: \fB\.deb\fR dpkg\-deb(1)
+.
+.IP "\(bu" 4
+dms: \fB\.dms\fR xdms(1)
+.
+.IP "\(bu" 4
+lha: \fB\.lzh\fR \fB\.lzs\fR lha(1)
+.
+.IP "" 0
+.
+.SH "BUGS"
+.
+.IP "\(bu" 4
+Helper programs are almost universally insecure\.
+.
+.IP "\(bu" 4
+If the current directory is included in an archive, should the archive be placed the nearest non\-contained parent directory?
+.
+.IP "\(bu" 4
+Important file formats to implement: cpio, rpm, ext2, hfs+ (dmg), fat32, iso, udf, various shar
+.
+.IP "\(bu" 4
+Magic detection does not work with some formats\. At the very least: \fB\.kgb\fR, \fB\.lzo\fR, \fB\.rz\fR, \fB\.zpaq\fR, any \fB\.exe\fR
+.
+.IP "\(bu" 4
+\fB\.tgz\fR, \fB\.tZ\fR, \fB\.tbz2\fR, \fB\.txz\fR, and so forth should be parsed as a list\. As extensions they will to be trimmed too early and the file will probably not unpack all the way\.
+.
+.IP "\(bu" 4
+\fBunpack\fR will not read a list of types, just one type\.
+.
+.IP "" 0
+.
+.SH "COPYRIGHT"
+Public Domain
+.
+.SH "SEE ALSO"
+atool(1), patool(1)
