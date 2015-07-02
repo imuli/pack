@@ -82,27 +82,29 @@ ensureNoPath dest = do
         (True, True) -> purgePath dest
         (_, False) -> return ()
 
-pack :: Int -> [FileType] -> [FilePath] -> IO ()
-pack _ [] _ = return ()
-pack depth types absfiles = do
+pack :: Int -> [FileType] -> FilePath -> [FilePath] -> IO ()
+pack _ [] _ _ = return ()
+pack depth types basename absfiles = do
     ensureNoPath dest
     absdest <- absolutePath dest
     r <- compact filetype files absdest dir
     if r == ExitSuccess
         then do removeIntermediaries depth files
-                pack (depth+1) (tail types) [absdest]
+                pack (depth+1) (tail types) dest [absdest]
         else exitWith r
   where
     prefix = commonPath absfiles
     dir = (takeDirectory prefix) ++ "/"
     files = map (removePrefix dir) absfiles
     filetype = (head types)
-    dest = (ifNull flags_name $ takeFileName prefix) ++ "." ++ show filetype
-    ifNull [] x = x
-    ifNull x _ = x
+    dest = basename ++ "." ++ show filetype
 
 main :: IO ()
 main = do
     _ <- $initHFlags "pack 0.1\n\n\tpack [options] [files]"
     absfiles <- mapM absolutePath arguments
-    pack 0 flags_type absfiles
+    pack 0 flags_type (basename $ commonPath absfiles) absfiles
+  where
+    basename path = ifNull flags_name $ takeFileName path
+    ifNull [] x = x
+    ifNull x _ = x
