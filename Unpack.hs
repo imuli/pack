@@ -11,7 +11,6 @@ import System.Directory
 import System.Exit
 import System.FilePath
 import System.IO
-import System.Process
 import System.Random
 
 import Archive
@@ -19,7 +18,6 @@ import Path
 
 defineEQFlag "t:type" [| [Unknown] :: [ArchiveType] |] "type" "Formats."
 defineFlag "k:keep" False "Keep original file."
-defineFlag "f:force" False "Force overwrite."
 return[]
 
 tempDir :: IO String
@@ -41,6 +39,7 @@ getFileType types magic file = do
 
 renameClever :: FilePath -> FilePath -> IO ()
 renameClever dir dest = do
+    purgePath dest
     files <- liftM (filter isRealEntry) (getDirectoryContents dir)
     case length files of
          0 -> return ()
@@ -78,14 +77,10 @@ unpack depth types magic file = do
         [Unknown] -> [Unknown]
         x:xs -> xs
     doChecks filetype = do
-        exists <- doesPathExist dest
-        case (depth, not flags_force && exists, filetype) of
-             (0, True, _) -> error $ file ++ ": Already Exists."
-             (0, _, Unknown) -> error $ file ++ ": Unknown Format."
-             (_, True, _) -> exitWith ExitSuccess
-             (_, _, Unknown) -> exitWith ExitSuccess 
-             (_, False, _) -> return ()
-
+        case (depth, filetype) of
+             (0, Unknown) -> error $ file ++ ": Unknown Format."
+             (_, Unknown) -> exitWith ExitSuccess 
+             (_, _) -> freePath dest (return ())
 
 main :: IO ()
 main = do

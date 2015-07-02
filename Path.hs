@@ -1,15 +1,27 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Path (
   commonPath,
   doesPathExist,
   purgePath,
   renamePath,
   absolutePath,
+  freePath,
   ) where
 
 import Data.Maybe
+import HFlags
 import System.Directory
 import System.FilePath
 import System.IO
+
+defineFlag "f:force" False "Force overwrite."
+freePath :: FilePath -> IO () -> IO ()
+freePath path todo = do
+    exists <- doesPathExist path
+    if not flags_force && exists
+        then error $ path ++ ": already exists."
+        else todo
 
 commonPath :: [FilePath] -> FilePath
 commonPath files =

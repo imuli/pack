@@ -9,13 +9,11 @@ import System.Directory
 import System.Exit
 import System.FilePath
 import System.IO
-import System.Process
 
-import Path
 import Archive
+import Path
 
 defineEQFlag "t:type" [| [TAR, XZ] :: [ArchiveType] |] "type" "Formats"
-defineEQFlag "f:force" [| False :: Bool |] "" "Force overwrite."
 defineEQFlag "n:name" [| "" :: String |] "[name]" "Output Base Name"
 return[]
 
@@ -26,18 +24,10 @@ removeIntermediaries :: Int -> [FilePath] -> IO ()
 removeIntermediaries 0 _ = return ()
 removeIntermediaries _ files = mapM_ purgePath files
 
-ensureNoPath :: FilePath -> IO ()
-ensureNoPath dest = do
-    exists <- doesPathExist dest
-    case (flags_force, exists) of
-        (False, True) -> error $ dest ++ ": already exists."
-        (True, True) -> purgePath dest
-        (_, False) -> return ()
-
 pack :: Int -> [ArchiveType] -> FilePath -> [FilePath] -> IO ()
 pack _ [] _ _ = return ()
 pack depth types basename absfiles = do
-    ensureNoPath dest
+    freePath dest (purgePath dest)
     absdest <- absolutePath dest
     r <- build filetype files absdest dir
     if r == ExitSuccess
