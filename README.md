@@ -89,7 +89,6 @@ with the basename of the archive.
   At the very least: `.kgb`, `.lzo`, `.rz`, `.zpaq`, any `.exe`
 * `.tgz`, `.tZ`, `.tbz2`, `.txz`, and so forth should be parsed as a list.
   As extensions they will to be trimmed too early and the file will probably not unpack all the way.
-* `unpack` will not read a list of types, just one type.
 
 ## COPYRIGHT
 

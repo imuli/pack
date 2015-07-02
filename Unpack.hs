@@ -17,7 +17,7 @@ import System.Random
 import FileType
 import Path
 
-defineEQFlag "t:type" [| Unknown :: FileType |] "type" "Force file type."
+defineEQFlag "t:type" [| [Unknown] :: [FileType] |] "type" "Formats."
 defineFlag "k:keep" False "Keep original file."
 defineFlag "f:force" False "Force overwrite."
 return[]
@@ -85,13 +85,14 @@ tempDir = do
         createDirectory name
         return name
 
-getFileType :: Magic -> FilePath -> IO FileType
-getFileType magic file = do
-    case flags_type of
-         Unknown -> do
+getFileType :: [FileType] -> Magic -> FilePath -> IO FileType
+getFileType types magic file = do
+    case types of
+         [] -> return Unknown
+         [Unknown] -> do
                     mimetype <- magicFile magic file
                     return (read mimetype :: FileType)
-         x -> return x
+         x:xs -> return x
 
 renameClever :: FilePath -> FilePath -> IO ()
 renameClever dir dest = do
@@ -113,30 +114,32 @@ maybeRemoveFile depth file = do
          False -> removeFile file
          True -> return ()
 
-unpack :: Int -> Magic -> FilePath -> IO ()
-unpack depth magic relfile = do
-    file <- absolutePath relfile
-    let dest = takeBaseName file in do
-        filetype <- getFileType magic file
-        doChecks depth dest filetype
-        bracket tempDir purgePath ( \dir -> do
-            r <- extract filetype file dir
-            if r == ExitSuccess
-                then do renameClever dir dest
-                        maybeRemoveFile depth file
-                        unpack (depth+1) magic dest
-                else exitWith r
-            )
+unpack :: Int -> [FileType] -> Magic -> FilePath -> IO ()
+unpack depth types magic file = do
+    filetype <- getFileType types magic file
+    doChecks filetype
+    bracket tempDir purgePath ( \dir -> do
+        r <- extract filetype file dir
+        if r == ExitSuccess
+            then do maybeRemoveFile depth file
+                    renameClever dir dest
+                    unpack (depth+1) nexttypes magic =<< absolutePath dest
+            else exitWith r
+        )
   where
-    doChecks depth file filetype = do
-        isfile <- doesFileExist file
-        isdir <- doesDirectoryExist file
-        case (depth, flags_force || not (isfile || isdir), filetype) of
-             (0, False, _) -> error $ file ++ ": Already Exists."
+    dest = takeBaseName file
+    nexttypes = case types of
+        [] -> []
+        [Unknown] -> [Unknown]
+        x:xs -> xs
+    doChecks filetype = do
+        exists <- doesPathExist dest
+        case (depth, not flags_force && exists, filetype) of
+             (0, True, _) -> error $ file ++ ": Already Exists."
              (0, _, Unknown) -> error $ file ++ ": Unknown Format."
-             (_, False, _) -> exitWith ExitSuccess
+             (_, True, _) -> exitWith ExitSuccess
              (_, _, Unknown) -> exitWith ExitSuccess 
-             (_, True, _) -> return ()
+             (_, False, _) -> return ()
 
 
 main :: IO ()
@@ -144,5 +147,6 @@ main = do
     _ <- $initHFlags "unpack 0.1\n\n\tunpack [options] [files]"
     magic <- magicOpen [MagicMimeType]
     magicLoadDefault magic
-    mapM_ (unpack 0 magic) arguments
+    files <- mapM absolutePath arguments
+    mapM_ (unpack 0 (reverse flags_type) magic) files
 
