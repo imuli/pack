@@ -14,68 +14,13 @@ import System.IO
 import System.Process
 import System.Random
 
-import FileType
+import Archive
 import Path
 
-defineEQFlag "t:type" [| [Unknown] :: [FileType] |] "type" "Formats."
+defineEQFlag "t:type" [| [Unknown] :: [ArchiveType] |] "type" "Formats."
 defineFlag "k:keep" False "Keep original file."
 defineFlag "f:force" False "Force overwrite."
 return[]
-
--- | extract into a directory
-extractDir :: String -> [String] -> FilePath -> IO ExitCode
-extractDir cmd args dest = do
-    (_,_,_,p) <- createProcess (proc cmd args){ cwd = Just dest
-                                              , close_fds = True
-                                              }
-    waitForProcess p
-
--- | extract into a file in specifile directory
-extractFile :: String -> [String] -> FilePath -> IO ExitCode
-extractFile cmd args dest = do
-    destH <- openBinaryFile (dest ++ "/file") WriteMode
-    (_,_,_,p) <- createProcess (proc cmd args){ cwd = Just dest
-                                              , close_fds = True
-                                              , std_out = UseHandle destH
-                                              }
-    waitForProcess p
-
-extract :: FileType -> FilePath -> FilePath -> IO ExitCode
-extract filetype file =
-    case filetype of
-         A7Z   -> dos  "7z"
-         ACE   -> dos  "unace"
-         ADF   -> bare "unadf"
-         ALZ   -> bare "unalz"
-         AR    -> dos  "ar"
-         ARC   -> dos  "arc"
-         ARJ   -> dos  "arj"
-         BZIP2 -> gz   "bzip2"
-         CAB   -> bare "cabextract"
-         COMP  -> gz   "compress"
-         DEB   -> path "dpkg-deb" ["-x", file, "."]
-         DMS   -> dos  "xdms"
-         GZIP  -> gz   "gzip"
-         KGB   -> bare "kgb"
-         LHA   -> dos  "lha"
-         LRZIP -> path "lrzip" ["-d", "-q", "-o", "file", file]
-         LZIP  -> gz   "lzip"
-         LZMA  -> gz   "lzma"
-         LZOP  -> gz   "lzop"
-         RAR   -> dos  "unrar"
-         RZIP  -> path "rzip"  ["-d", "-k", "-o", "file", file]
-         TAR   -> path "tar"   ["-xf", file]
-         XZ    -> gz   "xz"
-         ZIP   -> bare "unzip"
-         ZOO   -> dos  "zoo"
-         ZPAQ  -> dos  "zpaq"
-         _ -> fail file
-  where
-    gz cmd = extractFile cmd ["-dc", file]
-    dos cmd = extractDir cmd ["x", file]
-    bare cmd = extractDir cmd [file]
-    path = extractDir
-    fail file _ = error $ file ++ ": Attempted to extract a file of unknown type."
 
 tempDir :: IO String
 tempDir = do
@@ -85,13 +30,13 @@ tempDir = do
         createDirectory name
         return name
 
-getFileType :: [FileType] -> Magic -> FilePath -> IO FileType
+getFileType :: [ArchiveType] -> Magic -> FilePath -> IO ArchiveType
 getFileType types magic file = do
     case types of
          [] -> return Unknown
          [Unknown] -> do
                     mimetype <- magicFile magic file
-                    return (read mimetype :: FileType)
+                    return (read mimetype :: ArchiveType)
          x:xs -> return x
 
 renameClever :: FilePath -> FilePath -> IO ()
@@ -114,7 +59,7 @@ maybeRemoveFile depth file = do
          False -> removeFile file
          True -> return ()
 
-unpack :: Int -> [FileType] -> Magic -> FilePath -> IO ()
+unpack :: Int -> [ArchiveType] -> Magic -> FilePath -> IO ()
 unpack depth types magic file = do
     filetype <- getFileType types magic file
     doChecks filetype

@@ -1,4 +1,4 @@
-module FileType ( FileType(..) ) where
+module Archive.Types ( ArchiveType(..) ) where
 
 import Data.Char
 import Data.List
@@ -6,7 +6,7 @@ import Data.Maybe
 import Text.Read (Read(..), lift)
 import Text.ParserCombinators.ReadP hiding (lift)
 
-data FileType = Unknown
+data ArchiveType = Unknown
               | A7Z
               | ACE
               | ADF
@@ -43,7 +43,7 @@ data FileType = Unknown
               | ZPAQ
         deriving (Enum, Eq)
 
-names :: [(FileType, String)]
+names :: [(ArchiveType, String)]
 names = [ (Unknown, "Unknown")
         , (A7Z, "7z")
         , (A7Z, "7z-compressed")
@@ -89,13 +89,13 @@ names = [ (Unknown, "Unknown")
         , (ZPAQ, "zpaq")
         ]
 
-instance Show FileType where
+instance Show ArchiveType where
     show x = case listToMaybe $ filter (\(y, _) -> x == y) names of
                   Just (_, name) -> name
                   Nothing -> "Unknown"
     showList x = showString $ intercalate "." $ map show x
 
-readP :: ReadP FileType
+readP :: ReadP ArchiveType
 readP = ( eat (string "application/")
           $ eat (string "x-")
             $ choice $ map valueString names
@@ -105,7 +105,7 @@ readP = ( eat (string "application/")
     valueString (x, y) = string y >> return x
     allElse y = munch (\_ -> True) >> return y
 
-instance Read FileType where
+instance Read ArchiveType where
     readPrec = lift $ readP
     readListPrec = lift $ sepBy readP (char '.')
 
