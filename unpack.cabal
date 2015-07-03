@@ -20,9 +20,12 @@ library
                        Archive.Types
                        Archive.Extract
                        Archive.Build
+                       Archive.Identify
   build-depends:       base >= 4.7 && < 5
                      , process
                      , filepath
+                     , attoparsec
+                     , bytestring
   default-language:    Haskell2010
 
 executable pack
