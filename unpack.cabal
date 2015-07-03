@@ -48,7 +48,6 @@ executable unpack
                      , directory
                      , filepath
                      , hflags
-                     , magic
                      , process
                      , random
                      , unpack

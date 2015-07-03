@@ -6,7 +6,6 @@ import Control.Exception
 import Control.Monad
 import Data.Maybe
 import HFlags
-import Magic
 import System.Directory
 import System.Exit
 import System.FilePath
@@ -28,13 +27,11 @@ tempDir = do
         createDirectory name
         return name
 
-getFileType :: [ArchiveType] -> Magic -> FilePath -> IO ArchiveType
-getFileType types magic file = do
+getFileType :: [ArchiveType] -> FilePath -> IO ArchiveType
+getFileType types file = do
     case types of
          [] -> return Unknown
-         [Unknown] -> do
-                    mimetype <- magicFile magic file
-                    return (read mimetype :: ArchiveType)
+         [Unknown] -> identify file
          x:xs -> return x
 
 renameClever :: FilePath -> FilePath -> IO ()
@@ -58,16 +55,16 @@ maybeRemoveFile depth file = do
          False -> removeFile file
          True -> return ()
 
-unpack :: Int -> [ArchiveType] -> Magic -> FilePath -> IO ()
-unpack depth types magic file = do
-    filetype <- getFileType types magic file
+unpack :: Int -> [ArchiveType] -> FilePath -> IO ()
+unpack depth types file = do
+    filetype <- getFileType types file
     doChecks filetype
     bracket tempDir purgePath ( \dir -> do
         r <- extract filetype file dir
         if r == ExitSuccess
             then do maybeRemoveFile depth file
                     renameClever dir dest
-                    unpack (depth+1) nexttypes magic =<< absolutePath dest
+                    unpack (depth+1) nexttypes =<< absolutePath dest
             else exitWith r
         )
   where
@@ -85,8 +82,6 @@ unpack depth types magic file = do
 main :: IO ()
 main = do
     _ <- $initHFlags "unpack 0.1\n\n\tunpack [options] [files]"
-    magic <- magicOpen [MagicMimeType]
-    magicLoadDefault magic
     files <- mapM absolutePath arguments
-    mapM_ (unpack 0 (reverse flags_type) magic) files
+    mapM_ (unpack 0 (reverse flags_type)) files
 
