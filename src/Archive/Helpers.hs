@@ -40,8 +40,8 @@ runCommand dir input output cmd args = do
 -- | This mess turns 
 newArchiveType :: String -> ExpQ -> ExpQ -> ExpQ -> [String] -> Q [Dec]
 newArchiveType n buildQ extractQ idQ exts = do
-    build <- funD (mkName "build") [clause [] (normalB buildQ) []]
-    extract <- funD (mkName "extract") [clause [] (normalB extractQ) []]
+    build <- funD (mkName "builder") [clause [] (normalB buildQ) []]
+    extract <- funD (mkName "extracter") [clause [] (normalB extractQ) []]
     identify <- funD (mkName "ident") [clause [] (normalB $ returnQ idQ) []]
     let ai = InstanceD [] (insT "Archive") [build, extract, identify]
     let readB = returnQ $ appE [| RPrec.lift |] $ appE [| RP.string |] $ extE

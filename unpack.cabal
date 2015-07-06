@@ -18,14 +18,15 @@ library
   exposed-modules:     Archive
   other-modules:       Archive.Helpers
                        Archive.Types
-                       Archive.Extract
-                       Archive.Build
+                       Archive.Formats
+                       Archive.Formats.External
                        Archive.Identify
   build-depends:       base >= 4.7 && < 5
                      , process
                      , filepath
                      , attoparsec
                      , bytestring
+                     , template-haskell
   default-language:    Haskell2010
 
 executable pack
@@ -36,7 +37,6 @@ executable pack
                      , directory
                      , filepath
                      , hflags
-                     , process
                      , unpack
   default-language:    Haskell2010
 
@@ -48,7 +48,6 @@ executable unpack
                      , directory
                      , filepath
                      , hflags
-                     , process
                      , random
                      , unpack
   default-language:    Haskell2010

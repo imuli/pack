@@ -10,20 +10,21 @@ import Data.Attoparsec.ByteString
 import Data.ByteString (hGetContents, ByteString(..))
 
 import Archive.Types
-import Archive.Formats.External
+import Archive.Formats
 
-identify :: (Archive a) => FilePath -> IO a
-identify path = handle (\(e :: IOException) -> return Unknown) $
+identify :: FilePath -> IO Format
+identify path = handle (\(e :: IOException) -> return $ Format Unknown) $
     bracket (openBinaryFile path ReadMode)
             hClose
             identifyHandle
 
-identifyHandle :: (Archive a) => Handle -> IO a
+identifyHandle :: Handle -> IO Format
 identifyHandle handle = do
     content <- Data.ByteString.hGetContents handle
     case parseOnly magic content of
-         Left e -> return Unknown
+         Left e -> return $ Format Unknown
          Right r -> return r
 
-magic = ident
+magic :: Parser Format
+magic = fmap Format $ (ident :: Parser Debian)
 
