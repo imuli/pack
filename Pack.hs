@@ -13,7 +13,7 @@ import System.IO
 import Archive
 import Path
 
-defineEQFlag "t:type" [| [Format Tar, Format Xz] :: [Format] |] "type" "Formats"
+defineEQFlag "t:type" [| [TAR, XZ] :: [ArchiveType] |] "type" "Formats"
 defineEQFlag "n:name" [| "" :: String |] "[name]" "Output Base Name"
 return[]
 
@@ -24,17 +24,16 @@ removeIntermediaries :: Int -> [FilePath] -> IO ()
 removeIntermediaries 0 _ = return ()
 removeIntermediaries _ files = mapM_ purgePath files
 
-pack :: Int -> [Format] -> FilePath -> [FilePath] -> IO ()
+pack :: Int -> [ArchiveType] -> FilePath -> [FilePath] -> IO ()
 pack _ [] _ _ = return ()
 pack depth types basename absfiles = do
     freePath dest (purgePath dest)
     absdest <- absolutePath dest
     r <- build filetype files absdest dir
-    case r of
-        Left _ -> do removeIntermediaries depth files
-                     pack (depth+1) (tail types) dest [absdest]
-        Right m -> do hPutStrLn stderr m
-	              exitWith $ ExitFailure 1
+    if r == ExitSuccess
+        then do removeIntermediaries depth files
+                pack (depth+1) (tail types) dest [absdest]
+        else exitWith r
   where
     prefix = commonPath absfiles
     dir = (takeDirectory prefix) ++ "/"

@@ -1,10 +1,11 @@
-module Archive (
-    module Archive.Types,
-    module Archive.Formats,
-    module Archive.Identify,
+module Archive ( extract
+               , build
+               , identify
+               , ArchiveType(..)
 ) where
 
-import Archive.Types
-import Archive.Formats
+import Archive.Extract
+import Archive.Build
 import Archive.Identify
+import Archive.Types
 

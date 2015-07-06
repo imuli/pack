@@ -15,7 +15,7 @@ import System.Random
 import Archive
 import Path
 
-defineEQFlag "t:type" [| [Format Unknown] :: [Format] |] "type" "Formats."
+defineEQFlag "t:type" [| [Unknown] :: [ArchiveType] |] "type" "Formats."
 defineFlag "k:keep" False "Keep original file."
 return[]
 
@@ -27,11 +27,11 @@ tempDir = do
         createDirectory name
         return name
 
-getFileType :: [Format] -> FilePath -> IO Format
+getFileType :: [ArchiveType] -> FilePath -> IO ArchiveType
 getFileType types file = do
     case types of
-         [] -> return $ Format Unknown
-         [Format Unknown] -> identify file
+         [] -> return Unknown
+         [Unknown] -> identify file
          x:xs -> return x
 
 renameClever :: FilePath -> FilePath -> IO ()
@@ -55,28 +55,28 @@ maybeRemoveFile depth file = do
          False -> removeFile file
          True -> return ()
 
-unpack :: Int -> [Format] -> FilePath -> IO ()
+unpack :: Int -> [ArchiveType] -> FilePath -> IO ()
 unpack depth types file = do
     filetype <- getFileType types file
     doChecks filetype
     bracket tempDir purgePath ( \dir -> do
         r <- extract filetype file dir
-	case r of 
-	    Left _ -> do maybeRemoveFile depth file
-			 renameClever dir dest
-			 unpack (depth+1) nexttypes =<< absolutePath dest
-            Right _ -> exitWith $ ExitFailure 1
+        if r == ExitSuccess
+            then do maybeRemoveFile depth file
+                    renameClever dir dest
+                    unpack (depth+1) nexttypes =<< absolutePath dest
+            else exitWith r
         )
   where
     dest = takeBaseName file
     nexttypes = case types of
         [] -> []
-        [Format Unknown] -> [Format Unknown]
+        [Unknown] -> [Unknown]
         x:xs -> xs
     doChecks filetype = do
         case (depth, filetype) of
-             (0, Format Unknown) -> error $ file ++ ": Unknown Format."
-             (_, Format Unknown) -> exitWith ExitSuccess 
+             (0, Unknown) -> error $ file ++ ": Unknown Format."
+             (_, Unknown) -> exitWith ExitSuccess 
              (_, _) -> freePath dest (return ())
 
 main :: IO ()
